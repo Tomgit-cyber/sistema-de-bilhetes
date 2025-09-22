@@ -1,5 +1,5 @@
 # ===================== #
-#  Git Ignore Patterns   #
+#  Git Ignore Patterns  #
 # ===================== #
 
 # Logs
@@ -58,9 +58,8 @@ backend/*$py.class
 backend/*.db
 backend/*.sqlite
 
-# Frontend build output (se for um projeto React ou similar)
+# Frontend build output
 frontend/build/
-frontend/dist/
 
 # IDEs e Editores
 .vscode/
@@ -68,3 +67,7 @@ frontend/dist/
 *.swp
 *.swo
 *~
+
+# OS generated files
+.DS_Store
+Thumbs.db
