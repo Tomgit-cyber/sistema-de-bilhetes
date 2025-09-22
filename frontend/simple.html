@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2 pra 500 - Sistema de Apostas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .saldo {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .apostas-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .aposta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .numero {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-ativa {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .status-ganhadora {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-perdedora {
+            background: #dc3545;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-title {
+            text-align: center;
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .switch-form a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">2 pra 500</h1>
+            
+            <div id="loginForm">
+                <h2 style="text-align: center; margin-bottom: 20px;">Login</h2>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Senha:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button class="btn" style="width: 100%;" onclick="login()">Entrar</button>
+                <div class="switch-form">
+                    <a onclick="showRegisterForm()">Não tem conta? Cadastre-se</a>
+                </div>
+            </div>
+
+            <div id="registerForm" class="hidden">
+                <h2 style="text-align: center; margin-bottom: 20px;">Cadastro</h2>
+                <div class="form-group">
+                    <label for="registerNome">Nome:</label>
+                    <input type="text" id="registerNome" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerTelefone">Telefone:</label>
+                    <input type="tel" id="registerTelefone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Senha:</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button class="btn" style="width: 100%;" onclick="register()">Cadastrar</button>
+                <div class="switch-form">
+                    <a onclick="showLoginForm()">Já tem conta? Faça login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela Principal -->
+    <div id="mainScreen" class="hidden">
+        <div class="container">
+            <div class="header">
+                <div class="logo">2 pra 500</div>
+                <div class="user-info">
+                    <span id="userName">Usuário</span>
+                    <div class="saldo">R$ <span id="userSaldo">0.00</span></div>
+                    <button class="btn btn-secondary" onclick="addSaldo(10)">+R$ 10</button>
+                    <button class="btn btn-secondary" onclick="addSaldo(50)">+R$ 50</button>
+                    <button class="btn btn-secondary" onclick="logout()">Sair</button>
+                </div>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div class="grid">
+                <!-- Informações do Sorteio -->
+                <div class="card">
+                    <h2>🏆 Sorteio Atual</h2>
+                    <div id="sorteioInfo">
+                        <p><strong>Data:</strong> <span id="sorteioData">-</span></p>
+                        <p><strong>Total Arrecadado:</strong> R$ <span id="sorteioTotal">0.00</span></p>
+                        <p><strong>Prêmio Estimado:</strong> R$ <span id="sorteioPremio">0.00</span></p>
+                        <p><strong>Total de Apostas:</strong> <span id="sorteioApostas">0</span></p>
+                        <p><strong>Status:</strong> <span id="sorteioStatus">-</span></p>
+                        <div id="numeroSorteado" class="hidden">
+                            <p><strong>Número Sorteado:</strong> <span id="numeroGanhador" class="numero">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fazer Aposta -->
+                <div class="card">
+                    <h2>🎯 Fazer Aposta</h2>
+                    <div class="form-group">
+                        <label for="numeroAposta">Escolha um número (1-500):</label>
+                        <input type="number" id="numeroAposta" min="1" max="500" placeholder="Digite um número">
+                    </div>
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <p><strong>Valor da aposta:</strong> R$ 2,00</p>
+                        <p><strong>Seu saldo:</strong> R$ <span id="saldoAposta">0.00</span></p>
+                    </div>
+                    <button class="btn" style="width: 100%;" onclick="fazerAposta()">Apostar R$ 2,00</button>
+                </div>
+
+                <!-- Minhas Apostas de Hoje -->
+                <div class="card">
+                    <h2>📋 Minhas Apostas de Hoje</h2>
+                    <div id="apostasHoje" class="apostas-list">
+                        <p style="text-align: center; color: #666;">Nenhuma aposta feita hoje</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://58hpi8cp3xjy.manus.space/api';
+        let currentUser = null;
+
+        // Funções de utilidade
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function formatCurrency(value) {
+            return parseFloat(value || 0).toFixed(2);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('pt-BR');
+        }
+
+        // Funções de API
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers,
+                    },
+                    credentials: 'include',
+                    ...options,
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro na requisição');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Erro na API:', error);
+                throw error;
+            }
+        }
+
+        // Funções de autenticação
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showAlert('Preencha todos os campos');
+                return;
+            }
+
+            try {
+                const response = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password }),
+                });
+
+                currentUser = response.user;
+                showMainScreen();
+                showAlert('Login realizado com sucesso!', 'success');
+                loadDashboardData();
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
+
+        async function register() {
+            const nome = document.getElementById('registerNome').value;
+            const email = document.getElementById('registerEmail').value;
+            const telefone = document.getElementById('registerTelefone').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if (!nome || !email || !telefone || !password) {
+                showAlert('Preencha todos os campos');
+                return;
+            }
+
+            try {
+                const response = await apiRequest('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ nome, email, telefone, password }),
+                });
+
+                currentUser = response.user;
+                showMainScreen();
+                showAlert('Cadastro realizado com sucesso!', 'success');
+                loadDashboardData();
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
+
+        async function logout() {
+            try {
+                await apiRequest('/auth/logout', { method: 'POST' });
+                currentUser = null;
+                showLoginScreen();
+                showAlert('Logout realizado com sucesso!', 'success');
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
+
+        // Funções de tela
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainScreen').classList.add('hidden');
+        }
+
+        function showMainScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.remove('hidden');
+            updateUserInfo();
+        }
+
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.nome;
+                document.getElementById('userSaldo').textContent = formatCurrency(currentUser.saldo);
+                document.getElementById('saldoAposta').textContent = formatCurrency(currentUser.saldo);
+            }
+        }
+
+        // Funções de apostas
+        async function fazerAposta() {
+            const numero = document.getElementById('numeroAposta').value;
+
+            if (!numero || numero < 1 || numero > 500) {
+                showAlert('Escolha um número válido entre 1 e 500');
+                return;
+            }
+
+            if (currentUser.saldo < 2) {
+                showAlert('Saldo insuficiente. Adicione créditos para apostar.');
+                return;
+            }
+
+            try {
+                const response = await apiRequest('/apostas/fazer-aposta', {
+                    method: 'POST',
+                    body: JSON.stringify({ numero: parseInt(numero) }),
+                });
+
+                showAlert(`Aposta realizada no número ${numero}!`, 'success');
+                document.getElementById('numeroAposta').value = '';
+                
+                // Atualiza dados
+                await loadDashboardData();
+                await updateCurrentUser();
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
+
+        async function addSaldo(valor) {
+            try {
+                await apiRequest('/user/adicionar-saldo', {
+                    method: 'POST',
+                    body: JSON.stringify({ valor }),
+                });
+
+                showAlert(`R$ ${valor.toFixed(2)} adicionados ao saldo!`, 'success');
+                await updateCurrentUser();
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
+
+        // Funções de dados
+        async function updateCurrentUser() {
+            try {
+                const response = await apiRequest('/auth/me');
+                currentUser = response.user;
+                updateUserInfo();
+            } catch (error) {
+                console.error('Erro ao atualizar usuário:', error);
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Carrega sorteio atual
+                const sorteioResponse = await apiRequest('/sorteios/sorteio-atual');
+                updateSorteioInfo(sorteioResponse.sorteio);
+
+                // Carrega apostas de hoje
+                const apostasResponse = await apiRequest('/apostas/apostas-hoje');
+                updateApostasHoje(apostasResponse.apostas);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showAlert('Erro ao carregar dados do dashboard');
+            }
+        }
+
+        function updateSorteioInfo(sorteio) {
+            document.getElementById('sorteioData').textContent = formatDate(sorteio.data_sorteio);
+            document.getElementById('sorteioTotal').textContent = formatCurrency(sorteio.total_arrecadado);
+            document.getElementById('sorteioPremio').textContent = formatCurrency(sorteio.total_arrecadado * 0.9);
+            document.getElementById('sorteioApostas').textContent = sorteio.total_apostas || 0;
+            document.getElementById('sorteioStatus').textContent = sorteio.status === 'aberto' ? 'Aberto' : sorteio.status;
+
+            if (sorteio.numero_sorteado) {
+                document.getElementById('numeroSorteado').classList.remove('hidden');
+                document.getElementById('numeroGanhador').textContent = sorteio.numero_sorteado;
+            } else {
+                document.getElementById('numeroSorteado').classList.add('hidden');
+            }
+        }
+
+        function updateApostasHoje(apostas) {
+            const container = document.getElementById('apostasHoje');
+            
+            if (apostas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma aposta feita hoje</p>';
+                return;
+            }
+
+            container.innerHTML = apostas.map(aposta => `
+                <div class="aposta-item">
+                    <span class="numero">${aposta.numero_escolhido}</span>
+                    <div>
+                        <div>R$ ${formatCurrency(aposta.valor_aposta)}</div>
+                        <span class="status status-${aposta.status}">${aposta.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Verificação de autenticação ao carregar
+        async function checkAuth() {
+            try {
+                const response = await apiRequest('/auth/me');
+                currentUser = response.user;
+                showMainScreen();
+                loadDashboardData();
+            } catch (error) {
+                showLoginScreen();
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
+

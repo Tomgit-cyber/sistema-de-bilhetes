@@ -42,8 +42,8 @@ class SorteioScheduler:
         """Executa o sorteio diário automaticamente"""
         try:
             with self.app.app_context():
-                from sorteio import Sorteio
-                from database import db
+                from src.models.sorteio import Sorteio
+                from src.models.database import db
                 
                 logger.info(f"Iniciando sorteio automático - {datetime.now()}")
                 
@@ -80,8 +80,8 @@ class SorteioScheduler:
         """Executa um sorteio manualmente (para testes ou casos especiais)"""
         try:
             with self.app.app_context():
-                from sorteio import Sorteio
-                from database import db
+                from src.models.sorteio import Sorteio
+                from src.models.database import db
                 
                 if data_sorteio is None:
                     data_sorteio = date.today()

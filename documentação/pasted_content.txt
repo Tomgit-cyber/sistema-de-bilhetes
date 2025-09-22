@@ -1,0 +1,210 @@
+# 📋 **GUIA COMPLETO PARA MANUS IA - MIGRAÇÃO E CONFIGURAÇÃO**
+
+## 👤 **PARA: Manus IA (Nova Conta Google)**
+## 📅 **DATA: [Data Atual]**
+## 🎯 **OBJETIVO: Configurar ambiente completo e assumir o projeto "2 PRA 500"**
+
+---
+
+## 🔐 **1. ACESSO AO PROJETO FIREBASE**
+
+### **Opção A: Como Colaborador (Mais Rápido)**
+1. **Aceitar convite** enviado para seu e-mail da nova conta Google
+2. Acessar: [Firebase Console](https://console.firebase.google.com/)
+3. Localizar projeto: `Sistema Bilhetes App`
+4. Verificar permissões de edição
+
+### **Opção B: Criar Novo Projeto (Recomendado para Produção)**
+1. Acessar Firebase Console com nova conta
+2. Criar novo projeto: `Sistema Bilhetes App - Produção`
+3. Habilitar Authentication → Sign-in method → Email/Password
+4. Configurar Hosting
+
+---
+
+## 📁 **2. CONFIGURAÇÃO DO AMBIENTE DE DESENVOLVIMENTO**
+
+### **Pré-requisitos:**
+- Node.js instalado (versão 14 ou superior)
+- Git instalado
+- Conta Google ativa
+
+### **Passos:**
+
+```bash
+# 1. Clonar repositório
+git clone https://github.com/Tomgit-cyber/sistema-de-bilhetes.git
+cd sistema-de-bilhetes/frontend
+
+# 2. Instalar dependências
+npm install
+
+# 3. Instalar Firebase CLI globalmente
+npm install -g firebase-tools
+```
+
+---
+
+## 🔧 **3. ESTRUTURA DE ARQUIVOS ESPERADA**
+
+```
+sistema-de-bilhetes/
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── scheduler.py
+│   ├── models/
+│   └── routes/
+└── frontend/
+    ├── public/
+    ├── src/
+    │   ├── App.jsx
+    │   ├── api.js
+    │   ├── firebase-config.js
+    │   ├── components/
+    │   └── ...
+    ├── package.json
+    └── tailwind.config.js
+```
+
+---
+
+## 🔥 **4. CONFIGURAÇÃO DO FIREBASE AUTHENTICATION**
+
+### **Criar arquivo: `src/firebase-config.js`**
+
+```javascript
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDHdtk8bqgYX92l1FzbBa46xtRWf-NlBrM",
+  authDomain: "sistema-bilhetes-app.firebaseapp.com",
+  projectId: "sistema-bilhetes-app",
+  storageBucket: "sistema-bilhetes-app.appspot.com",
+  messagingSenderId: "467620499912",
+  appId: "1:467620499912:web:[APP_ID_AQUI]"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+```
+
+---
+
+## 🔄 **5. MIGRAÇÃO DA AUTENTICAÇÃO**
+
+### **Componentes a serem atualizados:**
+- `src/components/Login.jsx`
+- `src/components/Register.jsx`
+
+### **Substituir chamadas antigas por:**
+```javascript
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase-config";
+
+// Exemplo de login
+const handleLogin = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Usuário logado:", userCredential.user);
+  } catch (error) {
+    console.error("Erro no login:", error.message);
+  }
+};
+```
+
+---
+
+## 🚀 **6. DEPLOY NO FIREBASE HOSTING**
+
+### **Comandos para deploy:**
+
+```bash
+# 1. Build do React
+npm run build
+
+# 2. Login no Firebase
+firebase login
+
+# 3. Inicializar Hosting (se for novo projeto)
+firebase init hosting
+
+# 4. Deploy
+firebase deploy --only hosting
+```
+
+### **URL de produção esperada:**
+```
+https://sistema-bilhetes-app.firebaseapp.com
+```
+
+---
+
+## 🔐 **7. CREDENCIAIS E CONFIGURAÇÕES**
+
+### **Projeto Firebase Atual:**
+- **Project ID:** `sistema-bilhetes-app`
+- **API Key:** `AIzaSyDHdtk8bqgYX92l1FzbBa46xtRWf-NlBrM`
+- **Auth Domain:** `sistema-bilhetes-app.firebaseapp.com`
+- **Project Number:** `467620499912`
+
+---
+
+## 📋 **8. CHECKLIST DE VALIDAÇÃO**
+
+### **Antes do Deploy:**
+- [ ] Clonar repositório com sucesso
+- [ ] Instalar todas dependências (`npm install`)
+- [ ] Criar `firebase-config.js` com credenciais corretas
+- [ ] Testar autenticação (login/registro)
+- [ ] Verificar build do React (`npm run build`)
+
+### **Após o Deploy:**
+- [ ] Acessar URL de produção
+- [ ] Testar registro de novo usuário
+- [ ] Testar login/logout
+- [ ] Testar compra de bilhete
+- [ ] Verificar histórico de apostas
+
+---
+
+## ⚠️ **9. PONTOS DE ATENÇÃO**
+
+### **Segurança:**
+- **NÃO** versionar credenciais sensíveis
+- Considerar uso de `.env` para variáveis de ambiente
+- Ativar reCAPTCHA no Firebase Auth
+
+### **Organização:**
+- Manter repositório GitHub atualizado
+- Documentar mudanças em commits claros
+- Configurar domínio personalizado se necessário
+
+---
+
+## 🆘 **10. SUPORTE E CONTATOS**
+
+### **Desenvolvedor Principal:**
+- **Nome:** Tomgit-cyber
+- **Repositório:** https://github.com/Tomgit-cyber/sistema-de-bilhetes
+
+### **Suporte Técnico:**
+- Firebase Documentation: https://firebase.google.com/docs
+- React Documentation: https://reactjs.org/docs/getting-started.html
+
+---
+
+## 🎯 **11. PRÓXIMOS PASSOS RECOMENDADOS**
+
+1. **Hoje:** Configurar ambiente e clonar projeto
+2. **Amanhã:** Finalizar integração Firebase Auth
+3. **Esta semana:** Deploy de teste e validação
+4. **Próxima semana:** Deploy final e monitoramento
+
+---
+
+**🎯 Projeto está em excelente estado!** 
+Com este guia, você deve conseguir assumir completamente o desenvolvimento e deploy da aplicação.
+
+Precisa de ajuda com algum passo específico?

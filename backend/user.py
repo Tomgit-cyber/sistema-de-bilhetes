@@ -1,55 +1,184 @@
-# C:\projetos_flutter\projeto-bilhetes\backend\user.py
-# ou
-# C:\projetos_flutter\projeto-bilhetes\backend\models\user.py
-print(f"Carregando user.py de: {__file__}")
+from flask import Blueprint, request, jsonify, session
+from src.models.database import db
+from src.models.user import User
 
-from database import db # Assumindo que database.py esta na mesma pasta
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+user_bp = Blueprint('user', __name__)
 
-class User(UserMixin, db.Model):
-    __tablename__ = 'users' # Nome da tabela no banco de dados
+def require_auth():
+    """Decorator para verificar autenticação"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    return User.query.get(user_id)
 
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    telefone = db.Column(db.String(20), nullable=True)
-    saldo = db.Column(db.Float, default=2.0) # Saldo inicial conforme requisitos
+@user_bp.route('/perfil', methods=['GET'])
+def get_perfil():
+    """Retorna o perfil do usuário logado"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        return jsonify({'user': user.to_dict()}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    # Relacionamento com as apostas
-    # 'Aposta' deve ser o nome da classe do modelo Aposta
-    # 'usuario' sera um atributo em cada instancia de Aposta
-    apostas = db.relationship('Aposta', backref='usuario', lazy=True)
+@user_bp.route('/perfil', methods=['PUT'])
+def update_perfil():
+    """Atualiza o perfil do usuário logado"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'Dados não fornecidos'}), 400
+        
+        # Atualiza campos permitidos
+        if 'nome' in data:
+            user.nome = data['nome']
+        
+        if 'telefone' in data:
+            user.telefone = data['telefone']
+        
+        # Verifica se o email foi alterado e se já existe
+        if 'email' in data and data['email'] != user.email:
+            existing_user = User.query.filter_by(email=data['email']).first()
+            if existing_user:
+                return jsonify({'error': 'Email já está em uso'}), 400
+            user.email = data['email']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Perfil atualizado com sucesso',
+            'user': user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-    def __init__(self, nome, email, password, telefone=None):
-        self.nome = nome
-        self.email = email
-        self.set_password(password) # Hasheia a senha
-        self.telefone = telefone
+@user_bp.route('/alterar-senha', methods=['PUT'])
+def alterar_senha():
+    """Altera a senha do usuário logado"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ('senha_atual', 'nova_senha')):
+            return jsonify({'error': 'Senha atual e nova senha são obrigatórias'}), 400
+        
+        # Verifica a senha atual
+        if not user.check_password(data['senha_atual']):
+            return jsonify({'error': 'Senha atual incorreta'}), 400
+        
+        # Atualiza a senha
+        from werkzeug.security import generate_password_hash
+        user.password_hash = generate_password_hash(data['nova_senha'])
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Senha alterada com sucesso'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-    def set_password(self, password):
-        """Hasheia a senha e a armazena."""
-        self.password_hash = generate_password_hash(password)
+@user_bp.route('/saldo', methods=['GET'])
+def get_saldo():
+    """Retorna o saldo atual do usuário"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        return jsonify({'saldo': user.saldo}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    def check_password(self, password):
-        """Verifica se a senha fornecida corresponde ao hash armazenado."""
-        return check_password_hash(self.password_hash, password)
+@user_bp.route('/adicionar-saldo', methods=['POST'])
+def adicionar_saldo():
+    """Adiciona saldo à conta do usuário (simulação de pagamento)"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        data = request.get_json()
+        
+        if not data or 'valor' not in data:
+            return jsonify({'error': 'Valor é obrigatório'}), 400
+        
+        valor = data['valor']
+        
+        if not isinstance(valor, (int, float)) or valor <= 0:
+            return jsonify({'error': 'Valor deve ser positivo'}), 400
+        
+        # Adiciona o saldo
+        user.adicionar_saldo(valor)
+        
+        return jsonify({
+            'message': 'Saldo adicionado com sucesso',
+            'saldo_atual': user.saldo
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-    def adicionar_saldo(self, valor):
-        """Adiciona saldo à conta do usuário."""
-        if valor > 0:
-            self.saldo += valor
+@user_bp.route('/historico-transacoes', methods=['GET'])
+def historico_transacoes():
+    """Retorna o histórico de transações do usuário (apostas)"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({'error': 'Usuário não autenticado'}), 401
+        
+        # Pega parâmetros de paginação
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        # Busca as apostas do usuário (que são as transações)
+        from src.models.aposta import Aposta
+        apostas_query = Aposta.query.filter_by(user_id=user.id).order_by(Aposta.data_aposta.desc())
+        apostas_paginadas = apostas_query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        transacoes = []
+        for aposta in apostas_paginadas.items:
+            transacao = {
+                'id': aposta.id,
+                'tipo': 'aposta',
+                'valor': -aposta.valor_aposta,  # Negativo porque é débito
+                'descricao': f'Aposta no número {aposta.numero_escolhido}',
+                'data': aposta.data_aposta.isoformat(),
+                'status': aposta.status,
+                'sorteio_data': aposta.sorteio.data_sorteio.isoformat()
+            }
+            
+            # Se a aposta foi ganhadora, adiciona o prêmio como transação separada
+            if aposta.status == 'ganhadora':
+                apostas_ganhadoras = aposta.sorteio.get_apostas_ganhadoras()
+                if apostas_ganhadoras:
+                    premio = aposta.sorteio.premio_total / len(apostas_ganhadoras)
+                    transacao['premio'] = premio
+            
+            transacoes.append(transacao)
+        
+        return jsonify({
+            'transacoes': transacoes,
+            'total': apostas_paginadas.total,
+            'pages': apostas_paginadas.pages,
+            'current_page': page
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    def to_dict(self):
-        """Retorna uma representação em dicionário do usuário."""
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'email': self.email,
-            'telefone': self.telefone,
-            'saldo': self.saldo
-        }
-
-    def __repr__(self):
-        return f'<User {self.email}>'

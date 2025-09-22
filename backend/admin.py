@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify, session
-from database import db
-from user import User
-from sorteio import Sorteio
-from scheduler import sorteio_scheduler
+from src.models.database import db
+from src.models.user import User
+from src.models.sorteio import Sorteio
+from src.services.scheduler import sorteio_scheduler
 from datetime import date, datetime
 
 admin_bp = Blueprint('admin', __name__)
@@ -114,7 +114,7 @@ def estatisticas_admin():
         sorteios_finalizados = Sorteio.query.filter_by(status='finalizado').count()
         
         # Estatísticas financeiras
-        from aposta import Aposta
+        from src.models.aposta import Aposta
         total_apostas = Aposta.query.count()
         total_arrecadado = db.session.query(db.func.sum(Sorteio.total_arrecadado)).scalar() or 0
         total_premiado = db.session.query(db.func.sum(Sorteio.premio_total)).scalar() or 0

@@ -1,7 +1,11 @@
-# C:\projetos_flutter\projeto-bilhetes\backend\models\database.py
-# ou
-# C:\projetos_flutter\projeto-bilhetes\backend\database.py
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
-# Cria uma instancia do SQLAlchemy
 db = SQLAlchemy()
+
+def init_db(app):
+    """Inicializa o banco de dados com a aplicação Flask"""
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
